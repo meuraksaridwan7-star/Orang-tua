@@ -71,7 +71,7 @@
             font-family: 'Cormorant Garamond', serif;
         }
         
-        /* Tab Content Visibility - CRITICAL FIX */
+        /* Tab Content Visibility */
         .tab-content {
             display: none;
             opacity: 0;
@@ -285,37 +285,49 @@
             font-family: 'Playfair Display', serif;
         }
         
-        /* File Upload */
+        /* File Upload - PERBAIKAN UTAMA */
         .file-upload {
             position: relative;
-            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
         }
         
         .file-upload input[type="file"] {
             position: absolute;
-            opacity: 0;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
+            opacity: 0;
             cursor: pointer;
-            left: 0;
-            top: 0;
+            z-index: 2; /* Pastikan input di atas label */
         }
         
         .upload-label {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
-            padding: 0.5rem 1rem;
+            padding: 0.75rem 1.25rem;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: background 0.3s;
+            border-radius: 0.75rem;
             backdrop-filter: blur(10px);
             border: 1px solid var(--border);
+            transition: all 0.3s;
+            pointer-events: none; /* Biarkan input menangani klik */
         }
         
-        .upload-label:hover {
+        /* Efek saat hover pada container */
+        .file-upload:hover .upload-label {
             background: rgba(255, 255, 255, 0.2);
+            border-color: var(--accent-mother);
+        }
+        
+        /* Efek saat file berhasil dimuat */
+        .file-upload.loaded .upload-label {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4CAF50;
+            color: #4CAF50;
         }
         
         /* Animations */
@@ -466,16 +478,17 @@
                 </div>
             </div>
             
-            <!-- File Upload -->
-            <div class="file-upload">
-                <input type="file" id="audioFile" accept="audio/*" aria-label="Upload Audio">
+            <!-- File Upload - FIXED STRUCTURE -->
+            <div class="file-upload" id="fileUploadContainer">
+                <!-- Input diposisikan absolut untuk menutupi seluruh container -->
+                <input type="file" id="audioFile" accept=".mp3,audio/*" aria-label="Upload Audio">
                 <div class="upload-label">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="17 8 12 3 7 8"/>
                         <line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
-                    <span data-translate="uploadMusic">Upload MP3</span>
+                    <span id="uploadText" data-translate="uploadMusic">Upload MP3</span>
                 </div>
             </div>
         </div>
@@ -918,6 +931,8 @@
             const volumeSlider = document.getElementById('volumeSlider');
             const audioFile = document.getElementById('audioFile');
             const songName = document.getElementById('songName');
+            const uploadContainer = document.getElementById('fileUploadContainer');
+            const uploadText = document.getElementById('uploadText');
             
             if (!audio || !playBtn) return;
             
@@ -926,6 +941,11 @@
             
             // Play/Pause
             playBtn.addEventListener('click', function() {
+                if (!audio.src || audio.src === window.location.href) {
+                    alert("Silakan upload file MP3 terlebih dahulu.");
+                    return;
+                }
+
                 if (isPlaying) {
                     audio.pause();
                     playIcon.style.display = 'block';
@@ -948,9 +968,19 @@
             audioFile.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
+                    // Validasi sederhana ekstensi
+                    if (!file.name.toLowerCase().endsWith('.mp3') && !file.type.startsWith('audio/')) {
+                        alert("Silakan pilih file audio yang valid (misal: .mp3).");
+                        return;
+                    }
+
                     const url = URL.createObjectURL(file);
                     audio.src = url;
                     songName.textContent = file.name.substring(0, 20) + (file.name.length > 20 ? '...' : '');
+                    
+                    // Update UI untuk menunjukkan file sudah dimuat
+                    uploadText.textContent = "✓ File Loaded";
+                    uploadContainer.classList.add('loaded');
                     
                     // Auto play
                     audio.play().then(() => {
@@ -991,7 +1021,7 @@
                     this.classList.add('active');
                     this.setAttribute('aria-selected', 'true');
                     
-                    // Show/hide content - FIXED LOGIC
+                    // Show/hide content
                     if (tab === 'mother') {
                         motherContent.classList.add('active');
                         fatherContent.classList.remove('active');
@@ -1044,6 +1074,10 @@
             const elements = document.querySelectorAll('[data-translate]');
             elements.forEach(el => {
                 const key = el.dataset.translate;
+                // Abaikan elemen uploadText jika sudah ada file loaded agar tidak tertimpa
+                if (el.id === 'uploadText' && document.getElementById('fileUploadContainer').classList.contains('loaded')) {
+                    return;
+                }
                 if (translations[lang] && translations[lang][key]) {
                     el.innerHTML = translations[lang][key];
                 }
