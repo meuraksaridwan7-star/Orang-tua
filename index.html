@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hari Ibu & Hari Ayah - Perayaan Cinta Keluarga</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --fg: #f5f5f7;
+            --fg-muted: #a0a0b0;
+            --accent-mother: #e8527a;
+            --accent-mother-soft: #ff8fab;
+            --accent-father: #4a90d9;
+            --accent-father-soft: #7eb8ff;
+            --card-bg: rgba(20, 20, 30, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            background: var(--bg-primary);
+            color: var(--fg);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .main-content {
+            position: relative;
+            z-index: 10;
+        }
+        
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .font-body {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        
+        /* Tab Content Visibility - CRITICAL FIX */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Tab Styling */
+        .tab-btn {
+            position: relative;
+            padding: 1rem 2rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+            color: var(--fg-muted);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        
+        .tab-btn::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: currentColor;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .tab-btn:hover::before,
+        .tab-btn.active::before {
+            width: 80%;
+        }
+        
+        .tab-btn.active {
+            color: var(--fg);
+        }
+        
+        .tab-btn.mother.active {
+            color: var(--accent-mother);
+        }
+        
+        .tab-btn.father.active {
+            color: var(--accent-father);
+        }
+        
+        /* Audio Player */
+        .audio-player {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            max-width: 400px;
+        }
+        
+        .play-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-mother), var(--accent-father));
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(232, 82, 122, 0.5);
+        }
+        
+        .volume-slider {
+            -webkit-appearance: none;
+            width: 100px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-mother);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        
+        /* Poem Card */
+        .poem-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            transition: transform 0.4s, box-shadow 0.4s;
+        }
+        
+        .poem-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .poem-card.mother-theme {
+            border-left: 4px solid var(--accent-mother);
+        }
+        
+        .poem-card.father-theme {
+            border-left: 4px solid var(--accent-father);
+        }
+        
+        /* Pantun Styling */
+        .pantun-verse {
+            padding: 1.5rem;
+            margin: 1rem 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 1rem;
+            border-left: 3px solid rgba(255, 255, 255, 0.2);
+            font-style: italic;
+        }
+        
+        /* Language Selector */
+        .lang-selector {
+            position: relative;
+        }
+        
+        .lang-btn {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            color: var(--fg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn:hover {
+            border-color: var(--accent-mother);
+        }
+        
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+            z-index: 100;
+            min-width: 140px;
+        }
+        
+        .lang-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .lang-option {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        
+        .lang-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* DateTime Display */
+        .datetime-display {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        /* File Upload */
+        .file-upload {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            left: 0;
+            top: 0;
+        }
+        
+        .upload-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+        }
+        
+        .upload-label:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        .stagger-1 { animation-delay: 0.1s; opacity: 0; }
+        .stagger-2 { animation-delay: 0.2s; opacity: 0; }
+        .stagger-3 { animation-delay: 0.3s; opacity: 0; }
+        .stagger-4 { animation-delay: 0.4s; opacity: 0; }
+        .stagger-5 { animation-delay: 0.5s; opacity: 0; }
+        
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--accent-mother), var(--accent-father));
+            border-radius: 4px;
+        }
+        
+        /* Focus States */
+        *:focus-visible {
+            outline: 2px solid var(--accent-mother);
+            outline-offset: 2px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tab-btn {
+                padding: 0.75rem 1rem;
+                font-size: 1rem;
+            }
+            
+            .poem-card {
+                padding: 1.5rem;
+            }
+            
+            .audio-player {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+    
+    <!-- Main Content -->
+    <div class="main-content min-h-screen">
+        <!-- Header -->
+        <header class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <!-- DateTime -->
+                    <div class="datetime-display">
+                        <div id="datetime" class="text-center">
+                            <div id="date" class="text-lg font-semibold"></div>
+                            <div id="time" class="text-2xl font-bold bg-gradient-to-r from-pink-400 to-blue-400 bg-clip-text text-transparent"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Language Selector -->
+                    <div class="lang-selector">
+                        <button class="lang-btn" id="langBtn" aria-label="Pilih Bahasa">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                            <span id="currentLang">Indonesia</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <div class="lang-dropdown" id="langDropdown">
+                            <div class="lang-option" data-lang="id">Indonesia</div>
+                            <div class="lang-option" data-lang="en">English</div>
+                            <div class="lang-option" data-lang="ja">日本語</div>
+                            <div class="lang-option" data-lang="de">Deutsch</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Audio Player Section -->
+        <div class="fixed top-24 right-4 z-40 flex flex-col gap-2 items-end" style="max-width: 300px;">
+            <div class="audio-player">
+                <button class="play-btn" id="playBtn" aria-label="Play/Pause">
+                    <svg id="playIcon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    <svg id="pauseIcon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                        <rect x="6" y="4" width="4" height="16"/>
+                        <rect x="14" y="4" width="4" height="16"/>
+                    </svg>
+                </button>
+                <div class="flex flex-col flex-1 min-w-0">
+                    <span class="text-sm text-gray-400" data-translate="nowPlaying">Lagu Kustom:</span>
+                    <span id="songName" class="font-semibold text-sm truncate">Belum ada file</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                    </svg>
+                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume">
+                </div>
+            </div>
+            
+            <!-- File Upload -->
+            <div class="file-upload">
+                <input type="file" id="audioFile" accept="audio/*" aria-label="Upload Audio">
+                <div class="upload-label">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <span data-translate="uploadMusic">Upload MP3</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hero Section -->
+        <section class="pt-32 pb-16 px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="font-display text-5xl md:text-7xl font-bold mb-4 animate-fade-in">
+                    <span class="bg-gradient-to-r from-pink-400 via-rose-300 to-blue-400 bg-clip-text text-transparent" data-translate="mainTitle">Perayaan Cinta</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-400 animate-fade-in stagger-1" data-translate="subtitle">
+                    Untuk Ibu dan Ayah Tercinta
+                </p>
+            </div>
+        </section>
+        
+        <!-- Tabs Navigation -->
+        <nav class="sticky top-20 z-30 bg-black/50 backdrop-blur-lg border-y border-white/10">
+            <div class="max-w-4xl mx-auto flex justify-center">
+                <button class="tab-btn mother active" data-tab="mother" aria-selected="true">
+                    <span data-translate="motherTab">Hari Ibu</span>
+                </button>
+                <button class="tab-btn father" data-tab="father" aria-selected="false">
+                    <span data-translate="fatherTab">Hari Ayah</span>
+                </button>
+            </div>
+        </nav>
+        
+        <!-- Main Content Area -->
+        <main class="max-w-4xl mx-auto px-4 py-12">
+            
+            <!-- Mother's Day Content -->
+            <div id="motherContent" class="tab-content active">
+                <div class="text-center mb-12">
+                    <h2 class="font-display text-4xl md:text-5xl font-bold text-pink-400 mb-4" data-translate="motherTitle">Untuk Ibu Tercinta</h2>
+                    <div class="w-32 h-1 bg-gradient-to-r from-pink-500 to-rose-400 mx-auto rounded-full"></div>
+                </div>
+                
+                <!-- Mother's Poem -->
+                <article class="poem-card mother-theme mb-8">
+                    <h3 class="font-display text-2xl font-bold text-pink-300 mb-6" data-translate="poemTitle">Puisi: Kasih yang Abadi</h3>
+                    <div class="poem-text text-lg leading-relaxed space-y-4">
+                        <p data-translate="motherPoem1">
+                            Ibu... kata yang sederhana, namun mengandung semesta kasih. Engkau adalah pelita dalam kegelapan malamku, pelukan hangat yang tak pernah pudar oleh waktu, sosok yang rela berkorban tanpa menghitung untung rugi.
+                        </p>
+                        
+                        <p data-translate="motherPoem2">
+                            Aku masih ingat, betapa sering engkau terjaga di malam yang sunyi, menemani demamku, mengusap keringat di keningku, nyanyian lembutmu menjadi pengantar tidurku, doa-doa yang engkau panjatkan dalam diam menjagaku.
+                        </p>
+                        
+                        <p data-translate="motherPoem3">
+                            Tanganmu yang kasar karena kerasnya kehidupan, adalah tangan terlembut yang pernah aku rasakan. Setiap kerutan di wajahmu adalah cerita perjuangan, setiap uban di rambutmu adalah saksi pengabdian.
+                        </p>
+                        
+                        <p data-translate="motherPoem4">
+                            Engkau mengajarkanku melangkah saat aku jatuh, menemaniku menangis saat aku sedih, tersenyum saat aku berhasil, meski lelahmu membelenggu. Ibu... engkau adalah malaikat tanpa sayap yang Tuhan kirimkan untukku.
+                        </p>
+                        
+                        <p data-translate="motherPoem5">
+                            Kadang aku membuatmu meneteskan air mata, kata-kata kasarku, kebandelanku, semua kesalahanku. Namun engkau tetap tersenyum, memaafkan tanpa syarat, kasihmu tak bertepi, seperti samudra yang tak berpinggiran.
+                        </p>
+                        
+                        <p data-translate="motherPoem6">
+                            Kini aku tahu, tidak ada kata yang cukup untuk menggambarkan, tidak ada hadiah yang mampu membalas segalanya. Yang bisa kuberikan hanyalah cinta dan doa, semoga Tuhan membalas kebaikanmu dengan surga-Nya.
+                        </p>
+                        
+                        <p data-translate="motherPoem7">
+                            Terima kasih Ibu... untuk setiap nafas yang engkau berikan, untuk setiap langkah yang engkau dampingi, untuk setiap air mata yang engkau hapus, untuk setiap mimpi yang engkau wujudkan.
+                        </p>
+                        
+                        <p data-translate="motherPoem8" class="text-pink-300 font-semibold italic text-xl">
+                            Aku mencintaimu, melebihi kata-kata yang mampu terucap, melebihi waktu yang terus berputar, melebihi apapun di dunia ini... Karena engkau adalah ibuku, permata tak ternilai harganya.
+                        </p>
+                    </div>
+                </article>
+                
+                <!-- Mother's Pantun -->
+                <article class="poem-card mother-theme">
+                    <h3 class="font-display text-2xl font-bold text-pink-300 mb-6" data-translate="pantunTitle">Pantun untuk Ibu</h3>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="motherPantun1">
+                            Jalan-jalan ke Kota Semarang<br>Membeli oleh-oleh gudeg<br>Ibu ku sayang tiada tara<br>Pengorbananmu tak akan kulupa
+                        </p>
+                    </div>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="motherPantun2">
+                            Burung merpati terbang tinggi<br>Hinggap di dahan pohon cemara<br>Kasih ibu sepanjang jalan<br>Kasih anak sepanjang galah
+                        </p>
+                    </div>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="motherPantun3">
+                            Pergi ke pasar membeli mangga<br>Mangganya manis rasanya enak<br>Ibu tercinta engkau mulia<br>Hatimu lembut penuh kasih sayang
+                        </p>
+                    </div>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="motherPantun4">
+                            Buah durian berduri-duri<br>Dimakan enak rasanya manis<br>Ibu yang baik hati periwi<br>Doaku slalu menyertai ibu tersayang
+                        </p>
+                    </div>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="motherPantun5">
+                            Anak ayam pulang petang<br>Induknya mencari makanan<br>Ibu janganlah kau resah<br>Anakmu slalu mendoakan
+                        </p>
+                    </div>
+                </article>
+            </div>
+            
+            <!-- Father's Day Content -->
+            <div id="fatherContent" class="tab-content">
+                <div class="text-center mb-12">
+                    <h2 class="font-display text-4xl md:text-5xl font-bold text-blue-400 mb-4" data-translate="fatherTitle">Untuk Ayah Tercinta</h2>
+                    <div class="w-32 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 mx-auto rounded-full"></div>
+                </div>
+                
+                <!-- Father's Poem -->
+                <article class="poem-card father-theme mb-8">
+                    <h3 class="font-display text-2xl font-bold text-blue-300 mb-6" data-translate="poemTitle2">Puisi: Gunung yang Tak Terguncang</h3>
+                    <div class="poem-text text-lg leading-relaxed space-y-4">
+                        <p data-translate="fatherPoem1">
+                            Ayah... engkau adalah gunung yang tak terguncang badai, penguat langkahku saat jalan terasa terjal, bayang besar yang melindungiku dari teriknya kehidupan, sosok diam yang berbicara melalui tindakan.
+                        </p>
+                        
+                        <p data-translate="fatherPoem2">
+                            Jarang sekali kata cinta terucap dari bibirmu, namun setiap tetes keringatmu adalah puisi kasih. Tangan kasarmu membangun rumah untuk kami, bahu kokohmu menjadi sandaran saat aku lelah.
+                        </p>
+                        
+                        <p data-translate="fatherPoem3">
+                            Aku lihat engkau bekerja dari pagi hingga malam, membawa beban berat tanpa pernah mengeluh. Pakaian sederhanamu, makanan seadamu, semua yang terbaik engkau berikan untuk kami.
+                        </p>
+                        
+                        <p data-translate="fatherPoem4">
+                            Ayah... engkau mengajarkanku artinya tanggung jawab, artinya berdiri tegak meski badai menghantam, artinya memberi tanpa mengharap kembali, artinya menjadi pria sejati bagi keluarga.
+                        </p>
+                        
+                        <p data-translate="fatherPoem5">
+                            Kadang aku salah paham dengan kesunyianmu, mengira engkau tak peduli, tak mencintai. Kini aku mengerti, diam adalah bahasamu, kasih yang tak perlu diucapkan untuk dibuktikan.
+                        </p>
+                        
+                        <p data-translate="fatherPoem6">
+                            Setiap keriput di wajahmu adalah medali perjuangan, setiap uban adalah saksi pengorbananmu. Engkau adalah pahlawan tanpa tanda jasa, ksatria tanpa pedang yang melindungi kerajaan keluarga.
+                        </p>
+                        
+                        <p data-translate="fatherPoem7">
+                            Maafkan aku Ayah, untuk semua kekecewaanku, untuk kata-kata kasar yang pernah terlontar, untuk air mata yang mungkin pernah membuatmu sedih, untuk semua hal yang membuatmu gelisah di malam hari.
+                        </p>
+                        
+                        <p data-translate="fatherPoem8">
+                            Terima kasih Ayah... untuk setiap langkah yang kau ambil, untuk setiap beban yang kau pikul, untuk setiap doa yang kau panjatkan dalam diam, untuk setiap mimpi yang kau wujudkan untukku.
+                        </p>
+                        
+                        <p data-translate="fatherPoem9" class="text-blue-300 font-semibold italic text-xl">
+                            Engkau adalah pilar yang menopang hidupku, fondasi yang membuatku berdiri tegak, Ayah... aku mencintaimu lebih dari yang kau tahu, lebih dari yang mampu aku sampaikan...
+                        </p>
+                    </div>
+                </article>
+                
+                <!-- Father's Pantun -->
+                <article class="poem-card father-theme">
+                    <h3 class="font-display text-2xl font-bold text-blue-300 mb-6" data-translate="pantunTitle2">Pantun untuk Ayah</h3>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="fatherPantun1">
+                            Pergi memancing di tepi sungai<br>Dapat ikan besar sangar<br>Ayahku pahlawan sejati<br>Pengorbananmu tak ternilai
+                        </p>
+                    </div>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="fatherPantun2">
+                            Burung elang terbang tinggi<br>Mengitari puncak gunung<br>Ayahku sosok yang abadi<br>Kasihnya setinggi langit
+                        </p>
+                    </div>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="fatherPantun3">
+                            Tanam padi di sawah luas<br>Hasilnya melimpah ruah<br>Ayahku teladan yang abadi<br>Aku bangga menjadi anakmu
+                        </p>
+                    </div>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="fatherPantun4">
+                            Buah kelapa tumbuh tinggi<br>Diminum segar airnya<br>Ayah tercinta kau berarti<br>Setiap detik waktu hidupku
+                        </p>
+                    </div>
+                    
+                    <div class="pantun-verse">
+                        <p data-translate="fatherPantun5">
+                            Kapal berlayar samudra luas<br>Mengarungi ombak yang ganas<br>Ayahku sosok yang tangguh<br>Menghadapi badai kehidupan
+                        </p>
+                    </div>
+                </article>
+            </div>
+            
+        </main>
+        
+        <!-- Footer -->
+        <footer class="py-8 text-center border-t border-white/10">
+            <p class="text-gray-500" data-translate="footer">Dibuat dengan cinta untuk orang tua tersayang</p>
+        </footer>
+    </div>
+    
+    <!-- Audio Element -->
+    <audio id="bgMusic" loop></audio>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        
+        // ==================== TRANSLATIONS ====================
+        const translations = {
+            id: {
+                mainTitle: "Perayaan Cinta",
+                subtitle: "Untuk Ibu dan Ayah Tercinta",
+                motherTab: "Hari Ibu",
+                fatherTab: "Hari Ayah",
+                motherTitle: "Untuk Ibu Tercinta",
+                fatherTitle: "Untuk Ayah Tercinta",
+                poemTitle: "Puisi: Kasih yang Abadi",
+                poemTitle2: "Puisi: Gunung yang Tak Terguncang",
+                pantunTitle: "Pantun untuk Ibu",
+                pantunTitle2: "Pantun untuk Ayah",
+                nowPlaying: "Lagu Kustom:",
+                uploadMusic: "Upload MP3",
+                footer: "Dibuat dengan cinta untuk orang tua tersayang",
+                motherPoem1: "Ibu... kata yang sederhana, namun mengandung semesta kasih. Engkau adalah pelita dalam kegelapan malamku, pelukan hangat yang tak pernah pudar oleh waktu, sosok yang rela berkorban tanpa menghitung untung rugi.",
+                motherPoem2: "Aku masih ingat, betapa sering engkau terjaga di malam yang sunyi, menemani demamku, mengusap keringat di keningku, nyanyian lembutmu menjadi pengantar tidurku, doa-doa yang engkau panjatkan dalam diam menjagaku.",
+                motherPoem3: "Tanganmu yang kasar karena kerasnya kehidupan, adalah tangan terlembut yang pernah aku rasakan. Setiap kerutan di wajahmu adalah cerita perjuangan, setiap uban di rambutmu adalah saksi pengabdian.",
+                motherPoem4: "Engkau mengajarkanku melangkah saat aku jatuh, menemaniku menangis saat aku sedih, tersenyum saat aku berhasil, meski lelahmu membelenggu. Ibu... engkau adalah malaikat tanpa sayap yang Tuhan kirimkan untukku.",
+                motherPoem5: "Kadang aku membuatmu meneteskan air mata, kata-kata kasarku, kebandelanku, semua kesalahanku. Namun engkau tetap tersenyum, memaafkan tanpa syarat, kasihmu tak bertepi, seperti samudra yang tak berpinggiran.",
+                motherPoem6: "Kini aku tahu, tidak ada kata yang cukup untuk menggambarkan, tidak ada hadiah yang mampu membalas segalanya. Yang bisa kuberikan hanyalah cinta dan doa, semoga Tuhan membalas kebaikanmu dengan surga-Nya.",
+                motherPoem7: "Terima kasih Ibu... untuk setiap nafas yang engkau berikan, untuk setiap langkah yang engkau dampingi, untuk setiap air mata yang engkau hapus, untuk setiap mimpi yang engkau wujudkan.",
+                motherPoem8: "Aku mencintaimu, melebihi kata-kata yang mampu terucap, melebihi waktu yang terus berputar, melebihi apapun di dunia ini... Karena engkau adalah ibuku, permata tak ternilai harganya.",
+                fatherPoem1: "Ayah... engkau adalah gunung yang tak terguncang badai, penguat langkahku saat jalan terasa terjal, bayang besar yang melindungiku dari teriknya kehidupan, sosok diam yang berbicara melalui tindakan.",
+                fatherPoem2: "Jarang sekali kata cinta terucap dari bibirmu, namun setiap tetes keringatmu adalah puisi kasih. Tangan kasarmu membangun rumah untuk kami, bahu kokohmu menjadi sandaran saat aku lelah.",
+                fatherPoem3: "Aku lihat engkau bekerja dari pagi hingga malam, membawa beban berat tanpa pernah mengeluh. Pakaian sederhanamu, makanan seadamu, semua yang terbaik engkau berikan untuk kami.",
+                fatherPoem4: "Ayah... engkau mengajarkanku artinya tanggung jawab, artinya berdiri tegak meski badai menghantam, artinya memberi tanpa mengharap kembali, artinya menjadi pria sejati bagi keluarga.",
+                fatherPoem5: "Kadang aku salah paham dengan kesunyianmu, mengira engkau tak peduli, tak mencintai. Kini aku mengerti, diam adalah bahasamu, kasih yang tak perlu diucapkan untuk dibuktikan.",
+                fatherPoem6: "Setiap keriput di wajahmu adalah medali perjuangan, setiap uban adalah saksi pengorbananmu. Engkau adalah pahlawan tanpa tanda jasa, ksatria tanpa pedang yang melindungi kerajaan keluarga.",
+                fatherPoem7: "Maafkan aku Ayah, untuk semua kekecewaanku, untuk kata-kata kasar yang pernah terlontar, untuk air mata yang mungkin pernah membuatmu sedih, untuk semua hal yang membuatmu gelisah di malam hari.",
+                fatherPoem8: "Terima kasih Ayah... untuk setiap langkah yang kau ambil, untuk setiap beban yang kau pikul, untuk setiap doa yang kau panjatkan dalam diam, untuk setiap mimpi yang kau wujudkan untukku.",
+                fatherPoem9: "Engkau adalah pilar yang menopang hidupku, fondasi yang membuatku berdiri tegak, Ayah... aku mencintaimu lebih dari yang kau tahu, lebih dari yang mampu aku sampaikan...",
+                motherPantun1: "Jalan-jalan ke Kota Semarang<br>Membeli oleh-oleh gudeg<br>Ibu ku sayang tiada tara<br>Pengorbananmu tak akan kulupa",
+                motherPantun2: "Burung merpati terbang tinggi<br>Hinggap di dahan pohon cemara<br>Kasih ibu sepanjang jalan<br>Kasih anak sepanjang galah",
+                motherPantun3: "Pergi ke pasar membeli mangga<br>Mangganya manis rasanya enak<br>Ibu tercinta engkau mulia<br>Hatimu lembut penuh kasih sayang",
+                motherPantun4: "Buah durian berduri-duri<br>Dimakan enak rasanya manis<br>Ibu yang baik hati periwi<br>Doaku slalu menyertai ibu tersayang",
+                motherPantun5: "Anak ayam pulang petang<br>Induknya mencari makanan<br>Ibu janganlah kau resah<br>Anakmu slalu mendoakan",
+                fatherPantun1: "Pergi memancing di tepi sungai<br>Dapat ikan besar sangar<br>Ayahku pahlawan sejati<br>Pengorbananmu tak ternilai",
+                fatherPantun2: "Burung elang terbang tinggi<br>Mengitari puncak gunung<br>Ayahku sosok yang abadi<br>Kasihnya setinggi langit",
+                fatherPantun3: "Tanam padi di sawah luas<br>Hasilnya melimpah ruah<br>Ayahku teladan yang abadi<br>Aku bangga menjadi anakmu",
+                fatherPantun4: "Buah kelapa tumbuh tinggi<br>Diminum segar airnya<br>Ayah tercinta kau berarti<br>Setiap detik waktu hidupku",
+                fatherPantun5: "Kapal berlayar samudra luas<br>Mengarungi ombak yang ganas<br>Ayahku sosok yang tangguh<br>Menghadapi badai kehidupan"
+            },
+            en: {
+                mainTitle: "Celebration of Love",
+                subtitle: "For Our Beloved Mother and Father",
+                motherTab: "Mother's Day",
+                fatherTab: "Father's Day",
+                motherTitle: "For Our Beloved Mother",
+                fatherTitle: "For Our Beloved Father",
+                poemTitle: "Poem: Eternal Love",
+                poemTitle2: "Poem: The Unshaken Mountain",
+                pantunTitle: "Pantun for Mother",
+                pantunTitle2: "Pantun for Father",
+                nowPlaying: "Custom Song:",
+                uploadMusic: "Upload MP3",
+                footer: "Created with love for beloved parents",
+                motherPoem1: "Mother... a simple word, yet containing a universe of love. You are the lamp in my darkest night, a warm embrace that never fades with time, a soul who sacrifices without counting the cost.",
+                motherPoem2: "I still remember how often you stayed awake in the silent night, accompanying my fever, wiping sweat from my forehead, your gentle lullabies becoming my bedtime melody, the prayers you whispered in silence guarding me.",
+                motherPoem3: "Your hands, roughened by life's hardships, are the gentlest hands I have ever felt. Every wrinkle on your face is a story of struggle, every gray hair on your head is a witness to your devotion.",
+                motherPoem4: "You taught me to walk when I fell, stayed with me when I cried, smiled when I succeeded, even when your own exhaustion weighed you down. Mother... you are an angel without wings that God sent for me.",
+                motherPoem5: "Sometimes I made you shed tears, with my harsh words, my stubbornness, all my mistakes. Yet you still smiled, forgiving without condition, your love boundless, like a shoreless ocean.",
+                motherPoem6: "Now I know, there are no words enough to describe you, no gift capable of repaying everything. All I can give is love and prayers, may God repay your kindness with His paradise.",
+                motherPoem7: "Thank you Mother... for every breath you gave me, for every step you accompanied, for every tear you wiped away, for every dream you made come true.",
+                motherPoem8: "I love you, beyond words that can be spoken, beyond time that keeps turning, beyond anything in this world... Because you are my mother, a priceless gem.",
+                fatherPoem1: "Father... you are a mountain unshaken by storms, strengthening my steps when the path feels steep, a great shadow protecting me from life's scorching heat, a silent figure who speaks through actions.",
+                fatherPoem2: "Rarely do words of love escape your lips, yet every drop of your sweat is a poem of love. Your rough hands built a home for us, your strong shoulders became my support when I was tired.",
+                fatherPoem3: "I see you working from morning until night, carrying heavy burdens without ever complaining. Your simple clothes, your humble meals, you gave us the best of everything.",
+                fatherPoem4: "Father... you taught me the meaning of responsibility, the meaning of standing tall even when storms strike, the meaning of giving without expecting return, the meaning of being a true man for the family.",
+                fatherPoem5: "Sometimes I misunderstood your silence, thinking you didn't care, didn't love. Now I understand, silence is your language, love that doesn't need to be spoken to be proven.",
+                fatherPoem6: "Every wrinkle on your face is a medal of struggle, every gray hair is a witness to your sacrifice. You are a hero without medals, a knight without a sword protecting the kingdom of family.",
+                fatherPoem7: "Forgive me Father, for all my disappointments, for the harsh words that may have escaped, for the tears I may have caused, for everything that kept you awake at night.",
+                fatherPoem8: "Thank you Father... for every step you took, for every burden you carried, for every prayer you whispered in silence, for every dream you fulfilled for me.",
+                fatherPoem9: "You are the pillar that supports my life, the foundation that makes me stand tall, Father... I love you more than you know, more than I can ever express...",
+                motherPantun1: "Walking to Semarang City<br>Buying gudeg for souvenirs<br>My beloved mother is incomparable<br>Your sacrifice I will never forget",
+                motherPantun2: "Dove flies high above<br>Perching on a pine tree branch<br>Mother's love spans the journey<br>Child's love spans a pole",
+                motherPantun3: "Going to market to buy mangoes<br>The mangoes are sweet and delicious<br>Beloved mother you are noble<br>Your heart is gentle full of love",
+                motherPantun4: "Durian fruit has many thorns<br>Eating it is sweet and delicious<br>Good mother of the nation<br>My prayers always accompany you dear mother",
+                motherPantun5: "Baby chick returns at dusk<br>Mother searches for food<br>Mother please don't worry<br>Your child always prays for you",
+                fatherPantun1: "Fishing by the riverside<br>Catching a big mighty fish<br>My father a true hero<br>Your sacrifice beyond measure",
+                fatherPantun2: "Eagle soars up high<br>Circling the mountain peak<br>My father an eternal figure<br>His love as high as the sky",
+                fatherPantun3: "Planting rice in vast fields<br>Harvest overflows abundantly<br>My father an eternal role model<br>I'm proud to be your child",
+                fatherPantun4: "Coconut palm grows tall<br>Drinking its water refreshing<br>Beloved father you mean so much<br>Every moment of my life",
+                fatherPantun5: "Ship sails the vast ocean<br>Navigating the fierce waves<br>My father a sturdy figure<br>Facing the storms of life"
+            },
+            ja: {
+                mainTitle: "愛の祭典",
+                subtitle: "最愛の母と父のために",
+                motherTab: "母の日",
+                fatherTab: "父の日",
+                motherTitle: "最愛の母へ",
+                fatherTitle: "最愛の父へ",
+                poemTitle: "詩：永遠の愛",
+                poemTitle2: "詩：揺るがない山",
+                pantunTitle: "母へのパントゥン",
+                pantunTitle2: "父へのパントゥン",
+                nowPlaying: "カスタム曲:",
+                uploadMusic: "MP3をアップロード",
+                footer: "最愛の両親のために愛を込めて作られました",
+                motherPoem1: "お母さん...シンプルな言葉、しかし愛の宇宙を含んでいる。あなたは私の最も暗い夜の灯火、時間と共に決して色褪せない温かい抱擁、コストを計算せずに犠牲にする魂。",
+                motherPoem2: "静かな夜にどれほど頻繁に起きていてくれたか覚えている、私の熱を見守り、私の額から汗を拭い、あなたの優しい子守唄が私の就寝時のメロディーになり、沈黙の中で囁かれたあなたの祈りが私を守ってくれた。",
+                motherPoem3: "人生の困難で荒くなったあなたの手は、私が感じた中で最も優しい手です。あなたの顔のすべての皺は闘争の物語、あなたの頭のすべての白髪は献身の証人です。",
+                motherPoem4: "私が転んだ時、歩くことを教えてくれた、私が泣いた時、そばにいてくれた、自分の疲れが重くのしかかっている時でさえ、私が成功した時、笑ってくれた。お母さん...あなたは神が私に送ってくれた翼のない天使です。",
+                motherPoem5: "時々、私はあなたを泣かせてしまった、私の厳しい言葉で、私の頑固さで、私のすべての過ちで。それでもあなたは笑い続け、条件なしに許し、あなたの愛は果てしなく、岸のない海のよう。",
+                motherPoem6: "今わかります、あなたを描写するのに十分な言葉はない、すべてに報いることができる贈り物はない。私が与えられるのは愛と祈りだけ、神があなたの親切を楽園で報いてくださいますように。",
+                motherPoem7: "ありがとうお母さん...あなたがくれたすべての息に、あなたが同行したすべての歩みに、あなたが拭ってくれたすべての涙に、あなたが叶えてくれたすべての夢に。",
+                motherPoem8: "私はあなたを愛しています、言葉で表現できるものを超えて、回り続ける時間を超えて、この世界の何ものをも超えて...あなたは私の母、かけがえのない宝石だから。",
+                fatherPoem1: "お父さん...あなたは嵐でも揺るがない山です、道が険しく感じる時、私の歩みを強めてくれる、人生の焼けつくような熱から私を守る大きな影、行動を通じて語る沈黙の人物。",
+                fatherPoem2: "愛の言葉があなたの唇から逃げることはまれですが、あなたの汗のすべての滴は愛の詩です。あなたの荒い手は私たちのために家を建て、あなたの強い肩は私が疲れた時の支えになりました。",
+                fatherPoem3: "朝から夜まで働くあなたを見ています、不満を言わずに重い荷物を背負って。あなたのシンプルな服、あなたの質素な食事、私たちに最高のものをすべて与えてくれました。",
+                fatherPoem4: "お父さん...あなたは責任の意味を教えてくれました、嵐が襲っても背筋を伸ばして立つ意味、見返りを期待せずに与える意味、家族のために真の男であることの意味。",
+                fatherPoem5: "時々私はあなたの沈黙を誤解していました、気にかけていない、愛していないと思っていました。今わかります、沈黙はあなたの言語、証明されるために話される必要のない愛。",
+                fatherPoem6: "あなたの顔のすべての皺は闘争のメダル、すべての白髪はあなたの犠牲の証人です。あなたは勲章のない英雄、家族という王国を守る剣のない騎士です。",
+                fatherPoem7: "許してくださいお父さん、私のすべての失望に対して、口から出たかもしれない厳しい言葉に対して、私が引き起こしたかもしれない涙に対して、夜あなたを目覚めさせていたすべてに対して。",
+                fatherPoem8: "ありがとうお父さん...あなたが踏んだすべての歩みに、あなたが運んだすべての荷物に、沈黙の中で囁かれたすべての祈りに、私のために叶えてくれたすべての夢に。",
+                fatherPoem9: "あなたは私の人生を支える柱、私を直立させてくれる基盤、お父さん...私はあなたをあなたが知っている以上に愛しています、私が表現できる以上に...",
+                motherPantun1: "スマランの街へ歩いて<br>お土産にグデッグを買って<br>最愛の母は比類なき存在<br>あなたの犠牲は決して忘れない",
+                motherPantun2: "鳩は高く空を飛び<br>松の木の枝に止まる<br>母の愛は道のりを越え<br>子の愛は棒ほどの長さ",
+                motherPantun3: "市場へマンゴーを買いに<br>マンゴーは甘くて美味しい<br>最愛の母あなたは気高い<br>あなたの心は優しく愛に満ち",
+                motherPantun4: "ドリアンは多くの棘を持つ<br>食べると甘くて美味しい<br>良い母は国の母<br>私の祈りはいつもあなたと共に",
+                motherPantun5: "雛は夕暮れに帰る<br>母は餌を探す<br>お母さん心配しないで<br>あなたの子はいつも祈っています",
+                fatherPantun1: "川辺で釣りをして<br>大きな強い魚を釣って<br>私の父は真の英雄<br>あなたの犠牲は計り知れない",
+                fatherPantun2: "鷲は高く舞い上がり<br>山頂を旋回する<br>私の父は永遠の存在<br>その愛は空のように高い",
+                fatherPantun3: "広大な田んぼに稲を植え<br>収穫は豊かに溢れる<br>私の父は永遠の手本<br>あなたの子で誇りに思う",
+                fatherPantun4: "椰子の木は高く育ち<br>その水は清涼<br>最愛の父あなたは大切<br>私の人生のすべての瞬間",
+                fatherPantun5: "船は広大な海を航行し<br>激しい波を乗り越える<br>私の父は丈夫な存在<br>人生の嵐に立ち向かう"
+            },
+            de: {
+                mainTitle: "Feier der Liebe",
+                subtitle: "Für unsere geliebte Mutter und unseren geliebten Vater",
+                motherTab: "Muttertag",
+                fatherTab: "Vatertag",
+                motherTitle: "Für unsere geliebte Mutter",
+                fatherTitle: "Für unseren geliebten Vater",
+                poemTitle: "Gedicht: Ewige Liebe",
+                poemTitle2: "Gedicht: Der unerschütterliche Berg",
+                pantunTitle: "Pantun für Mutter",
+                pantunTitle2: "Pantun für Vater",
+                nowPlaying: "Benutzerdefiniertes Lied:",
+                uploadMusic: "MP3 hochladen",
+                footer: "Mit Liebe für geliebte Eltern erstellt",
+                motherPoem1: "Mutter... ein einfaches Wort, das ein Universum der Liebe enthält. Du bist die Lampe in meiner dunkelsten Nacht, eine warme Umarmung, die mit der Zeit nie verblasst, eine Seele, die opfert, ohne die Kosten zu berechnen.",
+                motherPoem2: "Ich erinnere mich noch, wie oft du in der stillen Nacht wach bliebst, mein Fieber begleitest, den Schweiß von meiner Stirn wischst, deine sanften Wiegenlieder wurden zu meiner Einschlafmelodie, die Gebete, die du im Stillen flüstertest, bewachten mich.",
+                motherPoem3: "Deine Hände, durch die Härten des Lebens rau geworden, sind die sanftesten Hände, die ich je gefühlt habe. Jede Falte in deinem Gesicht ist eine Geschichte des Kampfes, jedes graue Haar auf deinem Kopf ist ein Zeuge deiner Hingabe.",
+                motherPoem4: "Du lehrtest mich zu gehen, als ich fiel, bliebst bei mir, als ich weinte, lächeltest, als ich Erfolg hatte, selbst als deine eigene Erschöpfung dich niederdrückte. Mutter... du bist ein Engel ohne Flügel, den Gott für mich gesandt hat.",
+                motherPoem5: "Manchmal habe ich dich zum Weinen gebracht, mit meinen harten Worten, meiner Starrköpfigkeit, all meinen Fehlern. Doch du lächeltest weiter, vergabst ohne Bedingung, deine Liebe grenzenlos, wie ein uferloser Ozean.",
+                motherPoem6: "Jetzt weiß ich, es gibt keine Worte, die ausreichen, um dich zu beschreiben, kein Geschenk, das fähig ist, alles zu vergelten. Alles, was ich geben kann, ist Liebe und Gebete, möge Gott deine Güte mit seinem Paradies vergelten.",
+                motherPoem7: "Danke Mutter... für jeden Atemzug, den du mir gegeben hast, für jeden Schritt, den du begleitet hast, für jede Träne, die du weggewischt hast, für jeden Traum, den du wahr gemacht hast.",
+                motherPoem8: "Ich liebe dich, über Worte hinaus, die gesprochen werden können, über die Zeit hinaus, die sich weiterdreht, über alles in dieser Welt hinaus... Denn du bist meine Mutter, ein unschätzbares Juwel.",
+                fatherPoem1: "Vater... du bist ein Berg, der von Stürmen unerschüttert bleibt, stärkst meine Schritte, wenn der Weg steil erscheint, ein großer Schatten, der mich vor der versengenden Hitze des Lebens schützt, eine stille Gestalt, die durch Handlungen spricht.",
+                fatherPoem2: "Selten entweichen Worte der Liebe deinen Lippen, doch jeder Tropfen deines Schweißes ist ein Gedicht der Liebe. Deine rauen Hände bauten ein Zuhause für uns, deine starken Schultern wurden meine Stütze, als ich müde war.",
+                fatherPoem3: "Ich sehe dich von früh bis spät arbeiten, schwere Lasten tragen, ohne jemals zu klagen. Deine einfachen Kleidung, deine bescheidene Mahlzeiten, du gabst uns das Beste von allem.",
+                fatherPoem4: "Vater... du hast mir die Bedeutung von Verantwortung gelehrt, die Bedeutung, aufrecht zu stehen, selbst wenn Stürme schlagen, die Bedeutung zu geben, ohne Erwartung, die Bedeutung, ein wahrer Mann für die Familie zu sein.",
+                fatherPoem5: "Manchmal habe ich dein Schweigen missverstanden, dachte, du kümmertest dich nicht, liebst nicht. Jetzt verstehe ich, Stille ist deine Sprache, Liebe, die nicht ausgesprochen werden muss, um bewiesen zu werden.",
+                fatherPoem6: "Jede Falte in deinem Gesicht ist eine Medaille des Kampfes, jedes graue Haar ist ein Zeuge deines Opfers. Du bist ein Held ohne Medaillen, ein Ritter ohne Schwert, der das Königreich der Familie beschützt.",
+                fatherPoem7: "Vergib mir Vater, für alle meine Enttäuschungen, für die harten Worte, die vielleicht entwichen sind, für die Tränen, die ich vielleicht verursacht habe, für alles, was dich nachts wach gehalten hat.",
+                fatherPoem8: "Danke Vater... für jeden Schritt, den du gegangen bist, für jede Last, die du getragen hast, für jedes Gebet, das du im Stillen geflüstert hast, für jeden Traum, den du für mich erfüllt hast.",
+                fatherPoem9: "Du bist die Säule, die mein Leben stützt, das Fundament, das mich aufrecht stehen lässt, Vater... ich liebe dich mehr als du weißt, mehr als ich jemals ausdrücken kann...",
+                motherPantun1: "Zu Fuß nach Semarang Stadt<br>Gekauft Gudeg als Souvenir<br>Meine geliebte Mutter ist unvergleichlich<br>Dein Opfer werde ich nie vergessen",
+                motherPantun2: "Taube fliegt hoch oben<br>Landet auf einem Kiefernzweig<br>Mutters Liebe überspannt die Reise<br>Kindes Liebe überspannt eine Stange",
+                motherPantun3: "Zum Markt gehen Mangos kaufen<br>Die Mangos sind süß und lecker<br>Geliebte Mutter du bist edel<br>Dein Herz ist sanft voller Liebe",
+                motherPantun4: "Durianfrucht hat viele Stacheln<br>Essen ist süß und lecker<br>Gute Mutter der Nation<br>Meine Gebete begleiten dich immer",
+                motherPantun5: "Küken kehrt in der Dämmerung zurück<br>Mutter sucht nach Futter<br>Mutter mach dir keine Sorgen<br>Dein Kind betet immer für dich",
+                fatherPantun1: "Am Flussufer angeln<br>Einen großen kräftigen Fisch fangen<br>Mein Vater ein wahrer Held<br>Dein Opfer jenseits von Messungen",
+                fatherPantun2: "Adler schwebt hoch oben<br>Kreist um den Berggipfel<br>Mein Vater eine ewige Gestalt<br>Seine Liebe so hoch wie der Himmel",
+                fatherPantun3: "Reis pflanzen auf weiten Feldern<br>Ernte überfließt reichlich<br>Mein Vater ein ewiges Vorbild<br>Ich bin stolz dein Kind zu sein",
+                fatherPantun4: "Kokospalme wächst hoch<br>Sein Wasser erfrischend trinken<br>Geliebter Vater du bedeutest so viel<br>Jeden Moment meines Lebens",
+                fatherPantun5: "Schiff segelt den weiten Ozean<br>Navigiert die heftigen Wellen<br>Mein Vater eine stämmige Gestalt<br>Den Stürmen des Lebens gegenüber"
+            }
+        };
+        
+        // ==================== GLOBAL VARIABLES ====================
+        let currentLang = 'id';
+        let currentTab = 'mother';
+        let isPlaying = false;
+        let scene = null;
+        let camera = null;
+        let renderer = null;
+        let particles = null;
+        let animationId = null;
+        
+        // ==================== INITIALIZE ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            initDateTime();
+            initAudio();
+            initTabs();
+            initLanguage();
+            initThreeJS();
+        });
+        
+        // ==================== DATE & TIME ====================
+        function initDateTime() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+        }
+        
+        function updateDateTime() {
+            const now = new Date();
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const dayName = days[now.getDay()];
+            const day = now.getDate();
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            const dateEl = document.getElementById('date');
+            const timeEl = document.getElementById('time');
+            
+            if (dateEl) {
+                dateEl.textContent = `${dayName}, ${day} ${month} ${year}`;
+            }
+            if (timeEl) {
+                timeEl.textContent = `${hours}:${minutes}:${seconds}`;
+            }
+        }
+        
+        // ==================== AUDIO PLAYER ====================
+        function initAudio() {
+            const audio = document.getElementById('bgMusic');
+            const playBtn = document.getElementById('playBtn');
+            const playIcon = document.getElementById('playIcon');
+            const pauseIcon = document.getElementById('pauseIcon');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const audioFile = document.getElementById('audioFile');
+            const songName = document.getElementById('songName');
+            
+            if (!audio || !playBtn) return;
+            
+            // Set initial volume
+            audio.volume = 0.7;
+            
+            // Play/Pause
+            playBtn.addEventListener('click', function() {
+                if (isPlaying) {
+                    audio.pause();
+                    playIcon.style.display = 'block';
+                    pauseIcon.style.display = 'none';
+                } else {
+                    audio.play().catch(e => console.log('Playback prevented:', e));
+                    playIcon.style.display = 'none';
+                    pauseIcon.style.display = 'block';
+                }
+                isPlaying = !isPlaying;
+            });
+            
+            // Volume Control
+            volumeSlider.addEventListener('input', function() {
+                const vol = Math.max(0, Math.min(1, this.value / 100));
+                audio.volume = vol;
+            });
+            
+            // File Upload
+            audioFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    audio.src = url;
+                    songName.textContent = file.name.substring(0, 20) + (file.name.length > 20 ? '...' : '');
+                    
+                    // Auto play
+                    audio.play().then(() => {
+                        isPlaying = true;
+                        playIcon.style.display = 'none';
+                        pauseIcon.style.display = 'block';
+                    }).catch(err => console.log('Autoplay prevented:', err));
+                }
+            });
+            
+            // Handle audio end (loop is set in HTML)
+            audio.addEventListener('ended', function() {
+                audio.currentTime = 0;
+                audio.play();
+            });
+        }
+        
+        // ==================== TABS ====================
+        function initTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const motherContent = document.getElementById('motherContent');
+            const fatherContent = document.getElementById('fatherContent');
+            
+            if (!motherContent || !fatherContent) {
+                console.error('Tab content elements not found');
+                return;
+            }
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+                    
+                    // Update active states
+                    tabBtns.forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-selected', 'false');
+                    });
+                    this.classList.add('active');
+                    this.setAttribute('aria-selected', 'true');
+                    
+                    // Show/hide content - FIXED LOGIC
+                    if (tab === 'mother') {
+                        motherContent.classList.add('active');
+                        fatherContent.classList.remove('active');
+                        updateParticleColors('mother');
+                    } else {
+                        motherContent.classList.remove('active');
+                        fatherContent.classList.add('active');
+                        updateParticleColors('father');
+                    }
+                    
+                    currentTab = tab;
+                });
+            });
+        }
+        
+        // ==================== LANGUAGE ====================
+        function initLanguage() {
+            const langBtn = document.getElementById('langBtn');
+            const langDropdown = document.getElementById('langDropdown');
+            const langOptions = document.querySelectorAll('.lang-option');
+            
+            if (!langBtn || !langDropdown) return;
+            
+            // Toggle dropdown
+            langBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                langDropdown.classList.toggle('show');
+            });
+            
+            // Close on outside click
+            document.addEventListener('click', function() {
+                langDropdown.classList.remove('show');
+            });
+            
+            // Language selection
+            langOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const lang = this.dataset.lang;
+                    setLanguage(lang);
+                    langDropdown.classList.remove('show');
+                });
+            });
+        }
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            const langNames = { id: 'Indonesia', en: 'English', ja: '日本語', de: 'Deutsch' };
+            document.getElementById('currentLang').textContent = langNames[lang];
+            
+            const elements = document.querySelectorAll('[data-translate]');
+            elements.forEach(el => {
+                const key = el.dataset.translate;
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+        }
+        
+        // ==================== THREE.JS 3D ====================
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+            
+            // Scene
+            scene = new THREE.Scene();
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 30;
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+            
+            // Create particles
+            createParticles();
+            
+            // Handle resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start animation
+            animate();
+        }
+        
+        function createParticles() {
+            const particleCount = 500;
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const sizes = new Float32Array(particleCount);
+            
+            const motherColor = new THREE.Color('#e8527a');
+            const fatherColor = new THREE.Color('#4a90d9');
+            
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                
+                positions[i3] = (Math.random() - 0.5) * 100;
+                positions[i3 + 1] = (Math.random() - 0.5) * 100;
+                positions[i3 + 2] = (Math.random() - 0.5) * 50;
+                
+                const mixRatio = Math.random();
+                const color = motherColor.clone().lerp(fatherColor, mixRatio);
+                colors[i3] = color.r;
+                colors[i3 + 1] = color.g;
+                colors[i3 + 2] = color.b;
+                
+                sizes[i] = Math.random() * 2 + 0.5;
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('aColor', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+            
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0 },
+                    uMotherColor: { value: motherColor },
+                    uFatherColor: { value: fatherColor },
+                    uMixRatio: { value: 0.3 }
+                },
+                vertexShader: `
+                    attribute vec3 aColor;
+                    attribute float aSize;
+                    varying vec3 vColor;
+                    uniform float uTime;
+                    
+                    void main() {
+                        vColor = aColor;
+                        vec3 pos = position;
+                        pos.y += sin(uTime * 0.5 + position.x * 0.1) * 2.0;
+                        pos.x += cos(uTime * 0.3 + position.y * 0.1) * 1.5;
+                        
+                        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                        gl_Position = projectionMatrix * mvPosition;
+                        gl_PointSize = aSize * (300.0 / -mvPosition.z);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vColor;
+                    
+                    void main() {
+                        float dist = length(gl_PointCoord - vec2(0.5));
+                        if (dist > 0.5) discard;
+                        
+                        float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
+                        gl_FragColor = vec4(vColor, alpha * 0.8);
+                    }
+                `,
+                transparent: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+            
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+        }
+        
+        function updateParticleColors(tab) {
+            if (!particles) return;
+            
+            const targetRatio = tab === 'mother' ? 0.1 : 0.9;
+            const material = particles.material;
+            
+            // Animate color mix
+            const startRatio = material.uniforms.uMixRatio.value;
+            const startTime = Date.now();
+            const duration = 1000;
+            
+            function animateColor() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                
+                material.uniforms.uMixRatio.value = startRatio + (targetRatio - startRatio) * eased;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateColor);
+                }
+            }
+            
+            animateColor();
+        }
+        
+        function onWindowResize() {
+            if (!camera || !renderer) return;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            if (particles && particles.material.uniforms) {
+                particles.material.uniforms.uTime.value = Date.now() * 0.001;
+                particles.rotation.y += 0.0003;
+            }
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // ==================== KEYBOARD ACCESSIBILITY ====================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const langDropdown = document.getElementById('langDropdown');
+                if (langDropdown) {
+                    langDropdown.classList.remove('show');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
